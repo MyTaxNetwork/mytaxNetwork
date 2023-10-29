@@ -1,0 +1,13 @@
+DJANGO_SETTINGS_MODULE=core.settings.dev
+DJANGO_SECRET_KEY=a9+qhaqgf*h!j0+&=#mey&u7ks%pt!13@=57dau0reqe3h2zd3
+CELERY_BROKER=redis://redis:6379/3 
+CELERY_BACKEND=redis://redis:6379/4
+CELERY_RESULT_BACKEND=redis://localhost:6379/5
+
+
+DOMAIN=locahost:8080
+EMAIL_PORT=1025
+
+CELERY_FLOWER_USER=admin
+CELERY_FLOWER_PASSWORD=admin123456
+SIGNING_KEY=jepg0q$vj7v3+lg^bl1_tu*a7rv$ea0n_mffs2ptbf@8ac5alq

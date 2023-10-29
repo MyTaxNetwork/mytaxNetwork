@@ -1,0 +1,128 @@
+version: "3.9"
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: ./docker/local/django/Dockerfile
+    command: /start
+    container_name: my_tax_network-api
+    volumes:
+      - .:/app
+      - static_volume:/app/staticfiles
+      - media_volume:/app/mediafiles
+    expose:
+      - "8000"
+    env_file:
+      - ./.envs/.local/.django
+      - ./.envs/.local/.postgres
+    depends_on:
+      - postgres
+      # - mailhog
+      # - redis
+    networks:
+      - my-tax-network-live
+
+  postgres:
+    build:
+      context: .
+      dockerfile: ./docker/local/postgres/Dockerfile
+    container_name: postgres
+    volumes:
+      - local_postgres_data:/var/lib/postgresql/data
+      - local_postgres_data_backups:/backups
+    env_file:
+      - ./.envs/.local/.postgres
+    networks:
+      - my-tax-network-live
+
+  # mailhog:
+  #   image: mailhog/mailhog:v1.0.0
+  #   container_name: mailhog
+  #   ports:
+  #     - "8025:8025"
+  #   networks:
+  #     - my-tax-network-live
+
+  # redis:
+  #   image: redis:6-alpine
+  #   container_name: redis
+  #   networks:
+  #     - my-tax-network-live
+
+  # celery_worker:
+  #   build:
+  #     context: .
+  #     dockerfile: ./docker/local/django/Dockerfile
+  #   command: /start-celeryworker
+  #   container_name: celery_worker
+  #   volumes:
+  #     - .:/app
+  #   env_file:
+  #     - ./.envs/.local/.django
+  #     - ./.envs/.local/.postgres
+  #   depends_on:
+  #     - redis
+  #     - postgres
+  #     - mailhog
+  #   networks:
+  #     - my-tax-network-live
+
+  # flower:
+  #   build:
+  #     context: .
+  #     dockerfile: ./docker/local/django/Dockerfile
+  #   command: /start-flower
+  #   container_name: flower
+  #   volumes:
+  #     - .:/app
+  #   env_file:
+  #     - ./.envs/.local/.django
+  #     - ./.envs/.local/.postgres
+  #   ports:
+  #     - "5555:5555"
+  #   depends_on:
+  #     - redis
+  #     - postgres
+  #   networks:
+  #     - my-tax-network-live
+
+  api_frontend:
+    build:
+      context: .
+      dockerfile: ./docker/local/node/Dockerfile
+    image: my_tax_network_frontend
+    command: npm start
+    volumes:
+      - .:/app
+      - /app/frontend/node_modules
+    ports:
+      - 3000:3000
+    depends_on:
+      - api
+    stdin_open: true
+
+  nginx:
+    restart: always
+    depends_on:
+      - api
+    volumes:
+      - static_volume:/app/staticfiles
+      - media_volume:/app/mediafiles
+    build:
+      context: ./docker/local/nginx
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    networks:
+      - my-tax-network-live
+
+networks:
+  my-tax-network-live:
+    driver: bridge
+
+volumes:
+  local_postgres_data: {}
+  local_postgres_data_backups: {}
+  static_volume:
+  media_volume:
